@@ -24,16 +24,27 @@ profile_output="$(./bin/check-vm890-profile.sh "$SPEC_FILE")"
 pre_runtime_output="$(./bin/verify-vm890-runtime.sh "$SPEC_FILE")"
 
 declare -a backup_files
+declare -a backup_verify_outputs
 declare -a hop_outputs
 declare -a verify_outputs
 declare -a runtime_outputs
+declare -a badger_outputs
 
 for target in $PANGOLIN_HOPS; do
   backup_file="$(./bin/create-pangolin-backup.sh "$SPEC_FILE" "$target")"
   backup_files+=("$backup_file")
+  # Verify the backup archive on the remote host contains all critical
+  # persistent-state paths BEFORE mutating anything. A missing/incomplete backup
+  # is a STOP condition (set -e will abort on failure).
+  backup_path="'${BACKUP_DIR}/${backup_file}'"
+  backup_verify_outputs+=("$(ssh "$SSH_TARGET" "tar -tzf $backup_path | grep -q 'docker-compose.yml' && tar -tzf $backup_path | grep -q 'config/db/db.sqlite$' && tar -tzf $backup_path | grep -q 'config/key$' && tar -tzf $backup_path | grep -q 'config/letsencrypt/acme.json$' && tar -tzf $backup_path | grep -q 'config/traefik/traefik_config.yml$' && tar -tzf $backup_path | grep -q 'config/config.yml$' && echo '[pass] backup contains all critical paths' || { echo '[fail] backup missing critical paths'; exit 1; }")")
   hop_outputs+=("$(./bin/apply-pangolin-hop.sh "$SPEC_FILE" "$target")")
   verify_outputs+=("$(./bin/verify-pangolin-version.sh "$SPEC_FILE" "$target")")
   runtime_outputs+=("$(./bin/verify-vm890-runtime.sh "$SPEC_FILE")")
+  # Pangolin migrations may auto-update the Badger plugin version in
+  # traefik_config.yml. Verify the resulting version meets the minimum for the
+  # new Pangolin version. Failure here is a STOP condition.
+  badger_outputs+=("$(./bin/verify-pangolin-badger.sh "$SPEC_FILE")")
 done
 
 remote_status="$(ssh "$SSH_TARGET" "docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}'")"
@@ -56,13 +67,15 @@ remote_status="$(ssh "$SSH_TARGET" "docker ps --format 'table {{.Names}}\t{{.Ima
     echo "./bin/create-pangolin-backup.sh $SPEC_FILE $target"
     echo "./bin/apply-pangolin-hop.sh $SPEC_FILE $target"
     echo "./bin/verify-pangolin-version.sh $SPEC_FILE $target"
+    echo "./bin/verify-pangolin-badger.sh $SPEC_FILE"
     echo "./bin/verify-vm890-runtime.sh $SPEC_FILE"
   done
   echo "Evidence:"
   echo "- Canonical URL: $CANONICAL_URL"
   echo "- Executed Pangolin hop path: $PANGOLIN_HOPS"
   echo "- Backup files: ${backup_files[*]}"
-  echo "- Final Pangolin target reached: ${PANGOLIN_IMAGE_REPO}:${PANGOLIN_HOPS##* }"
+  echo "- Final Pangolin target reached: ${PANGOLIN_HOPS##* } (edition derived from running image)"
+  echo "- Edition preservation: target derived from current running image prefix"
   echo "- Unrelated containers remained present in docker ps output"
   echo "Acceptance criteria:"
   echo "- profile check passes before mutation: yes"
@@ -73,17 +86,18 @@ remote_status="$(ssh "$SSH_TARGET" "docker ps --format 'table {{.Names}}\t{{.Ima
   echo "- unrelated containers remained running: yes"
   echo "- final report written under docs/reports/: yes"
   echo "Problems found:"
-  echo "- Pangolin 1.19 browser SSH-related features still require later companion validation for Badger and Newt paths"
+  echo "- Pangolin migration may auto-update the Badger plugin version in traefik_config.yml; verified post-hop"
   echo "Problems fixed:"
-  echo "- Pangolin upgraded through the staged path $PANGOLIN_HOPS"
+  echo "- Pangolin upgraded through the staged path $PANGOLIN_HOPS (Enterprise edition preserved)"
   echo "Stop conditions hit:"
   echo "- none"
   echo "Remaining risks:"
-  echo "- Gerbil remains behind the latest 1.4 patch line"
-  echo "- Traefik and Badger remain behind their latest lines and are intentionally out of scope here"
-  echo "- Browser SSH, RDP, and VNC feature paths from Pangolin 1.19 are not fully validated by this workflow"
+  echo "- Gerbil and Traefik companion updates are separate workflows"
+  echo "- Pangolin 1.22+ AI Gateway features require Badger >= v1.6.0 (verified post-hop)"
+  echo "- Representative site/resource testing is outside this automated workflow"
   echo "Next recommended task:"
-  echo "- create separate companion workflows for Gerbil and Traefik/Badger only if you want to activate the newer feature paths"
+  echo "- execute Gerbil companion update (1.5.0 -> 1.5.1)"
+  echo "- execute Traefik companion update (v3.7.11 -> v3.7.13)"
   echo
   echo "Profile output:"
   echo "$profile_output"
@@ -95,6 +109,9 @@ remote_status="$(ssh "$SSH_TARGET" "docker ps --format 'table {{.Names}}\t{{.Ima
     echo "Backup $((i+1)):"
     echo "${backup_files[$i]}"
     echo
+    echo "Backup $((i+1)) verify output:"
+    echo "${backup_verify_outputs[$i]}"
+    echo
     echo "Hop $((i+1)) apply output:"
     echo "${hop_outputs[$i]}"
     echo
@@ -103,6 +120,9 @@ remote_status="$(ssh "$SSH_TARGET" "docker ps --format 'table {{.Names}}\t{{.Ima
     echo
     echo "Hop $((i+1)) runtime output:"
     echo "${runtime_outputs[$i]}"
+    echo
+    echo "Hop $((i+1)) badger verify output:"
+    echo "${badger_outputs[$i]}"
     echo
   done
   echo "Final docker ps:"

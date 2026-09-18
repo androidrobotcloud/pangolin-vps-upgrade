@@ -22,8 +22,13 @@ remote() {
   ssh "$SSH_TARGET" "$@"
 }
 
-expected_image="${PANGOLIN_IMAGE_REPO}:${EXPECTED_VERSION}"
+# Derive the edition tag prefix from the current compose image so the expected
+# target preserves the running edition (e.g. "ee-" stays "ee-").
 compose_image="$(remote "cd '$STACK_PATH' && awk '/image:.*fosrl\\/pangolin:/ {print \$2; exit}' docker-compose.yml")"
+current_tag="${compose_image##*:}"
+edition_prefix="${current_tag%%[0-9]*}"
+expected_image="${PANGOLIN_IMAGE_REPO}:${edition_prefix}${EXPECTED_VERSION}"
+
 runtime_image="$(remote "docker inspect pangolin --format '{{.Config.Image}}'")"
 
 if [[ "$compose_image" != "$expected_image" ]]; then
