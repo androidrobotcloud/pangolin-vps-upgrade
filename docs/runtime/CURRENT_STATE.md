@@ -13,9 +13,9 @@ Last verified: `2026-09-18` (post Hop 1 execution)
 
 ## Live Versions
 
-- Pangolin: `fosrl/pangolin:ee-1.22.2`
-- Gerbil: `fosrl/gerbil:1.5.0`
-- Traefik: `traefik:v3.7.11`
+- Pangolin: `fosrl/pangolin:ee-1.23.0`
+- Gerbil: `fosrl/gerbil:1.5.1`
+- Traefik: `traefik:v3.7.13`
 - CrowdSec: `crowdsecurity/crowdsec:latest`
 - Badger plugin: `v1.7.0`
 
@@ -34,16 +34,16 @@ Last verified: `2026-09-18` (post Hop 1 execution)
 
 ## Current Rollback Backups Kept
 
-- `20260712-154853-pre-1.20.0.tar.gz`
-- `20260712-155338-pre-v3.7.7.tar.gz`
-- `20260824-143033-pre-1.21.1.tar.gz`
-- `20260824-143422-pre-1.4.3.tar.gz`
-- `20260824-143647-pre-1.5.0.tar.gz`
-- `20260824-143916-pre-v3.7.11.tar.gz`
-- `20260824-164422-pre-ee-1.21.1.tar.gz`
-- `20260918-163102-pre-1.22.2.tar.gz` (recovery point: ee-1.22.2, pre-Hop1)
-- `20260918-163442-pre-1.23.0.tar.gz` (recovery point: ee-1.22.2, pre-Hop2 attempt 1)
-- `20260918-163915-pre-1.23.0.tar.gz` (recovery point: ee-1.22.2, pre-Hop2 attempt 2)
+- `20260712-154853-pre-1.20.0.tar.gz` (Community era)
+- `20260712-155338-pre-v3.7.7.tar.gz` (Community era)
+- `20260824-143033-pre-1.21.1.tar.gz` (Community era)
+- `20260824-143422-pre-1.4.3.tar.gz` (Community era)
+- `20260824-143647-pre-1.5.0.tar.gz` (Community era)
+- `20260824-143916-pre-v3.7.11.tar.gz` (Community era)
+- `20260824-164422-pre-ee-1.21.1.tar.gz` (Enterprise conversion)
+- `20260918-163102-pre-1.22.2.tar.gz` (recovery: ee-1.22.2, pre-Hop1)
+- `20260918-170522-pre-1.5.1.tar.gz` (recovery: ee-1.23.0, pre-Gerbil)
+- `20260918-170743-pre-v3.7.13.tar.gz` (recovery: ee-1.23.0, pre-Traefik)
 
 ## Current Disk Snapshot
 
