@@ -34,10 +34,9 @@ for target in $PANGOLIN_HOPS; do
   backup_file="$(./bin/create-pangolin-backup.sh "$SPEC_FILE" "$target")"
   backup_files+=("$backup_file")
   # Verify the backup archive on the remote host contains all critical
-  # persistent-state paths BEFORE mutating anything. A missing/incomplete backup
-  # is a STOP condition (set -e will abort on failure).
-  backup_path="'${BACKUP_DIR}/${backup_file}'"
-  backup_verify_outputs+=("$(ssh "$SSH_TARGET" "tar -tzf $backup_path | grep -q 'docker-compose.yml' && tar -tzf $backup_path | grep -q 'config/db/db.sqlite$' && tar -tzf $backup_path | grep -q 'config/key$' && tar -tzf $backup_path | grep -q 'config/letsencrypt/acme.json$' && tar -tzf $backup_path | grep -q 'config/traefik/traefik_config.yml$' && tar -tzf $backup_path | grep -q 'config/config.yml$' && echo '[pass] backup contains all critical paths' || { echo '[fail] backup missing critical paths'; exit 1; }")")
+  # persistent-state paths BEFORE mutating anything, using the canonical
+  # verifier. A missing/incomplete backup is a STOP condition (set -e aborts).
+  backup_verify_outputs+=("$(./bin/verify-pangolin-backup.sh "$SPEC_FILE" "$backup_file")")
   hop_outputs+=("$(./bin/apply-pangolin-hop.sh "$SPEC_FILE" "$target")")
   verify_outputs+=("$(./bin/verify-pangolin-version.sh "$SPEC_FILE" "$target")")
   runtime_outputs+=("$(./bin/verify-vm890-runtime.sh "$SPEC_FILE")")
@@ -65,6 +64,7 @@ remote_status="$(ssh "$SSH_TARGET" "docker ps --format 'table {{.Names}}\t{{.Ima
   echo "./bin/verify-vm890-runtime.sh $SPEC_FILE"
   for target in $PANGOLIN_HOPS; do
     echo "./bin/create-pangolin-backup.sh $SPEC_FILE $target"
+    echo "./bin/verify-pangolin-backup.sh $SPEC_FILE <backup-filename>"
     echo "./bin/apply-pangolin-hop.sh $SPEC_FILE $target"
     echo "./bin/verify-pangolin-version.sh $SPEC_FILE $target"
     echo "./bin/verify-pangolin-badger.sh $SPEC_FILE"

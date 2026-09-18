@@ -193,9 +193,9 @@ DOWNGRADE 1.23->1.22: REFUSED
 ```
 
 ### Backup verification
-- Good tarball (all 6 paths): pass
-- Bad tarball (missing db.sqlite): fail ✓
-- Existing vm890 backup: all 6 critical paths present ✓
+- Canonical verifier (`verify-pangolin-backup.sh`) against known-good vm890 backup `20260824-164422-pre-ee-1.21.1.tar.gz` (remote): all 6 paths present → pass
+- Canonical verifier against intentionally incomplete local archive (missing db.sqlite, key, acme.json): correctly fails reporting 3 missing paths
+- Single canonical definition of backup validity — no duplicate inline checks
 
 ### Badger verification (live vm890)
 ```
@@ -246,9 +246,9 @@ Execute in order. **STOP at any failed gate.** Each `[MUTATING]` step must not b
 ### STAGE 1 — Backup checkpoint [MUTATING]
 ```bash
 B1=$(./bin/create-pangolin-backup.sh specs/pangolin-staged-upgrade-v1.vm890.conf 1.22.2)
-ssh hustler2025@vm890 "cd /home/hustler2025/docker/pangolin-vps && tar -tzf pangolin-vps-backups/$B1 | grep -q 'config/db/db.sqlite$'"
+./bin/verify-pangolin-backup.sh specs/pangolin-staged-upgrade-v1.vm890.conf "$B1"
 ```
-**STOP if:** tarball missing or critical paths absent.
+**STOP if:** tarball missing or the canonical verifier reports any of the 6 required paths missing.
 
 ### STAGE 2 — Pangolin hop ee-1.21.1 → ee-1.22.2 [MUTATING]
 ```bash
@@ -262,6 +262,7 @@ ssh hustler2025@vm890 "cd /home/hustler2025/docker/pangolin-vps && tar -tzf pang
 ### STAGE 3 — Backup + hop ee-1.22.2 → ee-1.23.0 [MUTATING]
 ```bash
 B2=$(./bin/create-pangolin-backup.sh specs/pangolin-staged-upgrade-v1.vm890.conf 1.23.0)
+./bin/verify-pangolin-backup.sh specs/pangolin-staged-upgrade-v1.vm890.conf "$B2"
 ./bin/apply-pangolin-hop.sh specs/pangolin-staged-upgrade-v1.vm890.conf 1.23.0
 ./bin/verify-pangolin-version.sh specs/pangolin-staged-upgrade-v1.vm890.conf 1.23.0
 ./bin/verify-pangolin-badger.sh specs/pangolin-staged-upgrade-v1.vm890.conf
