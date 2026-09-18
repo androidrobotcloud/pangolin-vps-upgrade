@@ -2,7 +2,7 @@
 
 This file is the quickest current-state snapshot for the live `vm890` Pangolin environment.
 
-Last verified: `2026-08-24`
+Last verified: `2026-09-18`
 
 ## Live Target
 
