@@ -2,6 +2,8 @@
 
 This repo is minimum worker-operable for bounded workflows:
 
+- `environment-status-scan-v1`
+
 - `pangolin-readonly-audit-v1`
 - `pangolin-upgrade-readiness-audit-v1`
 - `pangolin-staged-upgrade-v1`
@@ -11,6 +13,10 @@ This repo is minimum worker-operable for bounded workflows:
 ## Required Surface Present For This Workflow
 
 - `README.md`
+- `docs/ENVIRONMENTS.md`
+- `docs/handoffs/environment-status-scan-v1.md`
+- `specs/environments/`
+- `bin/environment-status-scan.sh`
 - `docs/MASTER_OPERATING_POLICY.md`
 - `docs/REPO_CONTRACT.md`
 - `docs/HANDOFF_TEMPLATE.md`
@@ -31,6 +37,8 @@ This repo is minimum worker-operable for bounded workflows:
 
 ### Workflow IDs
 
+- `environment-status-scan-v1`
+
 - `pangolin-readonly-audit-v1`
 - `pangolin-upgrade-readiness-audit-v1`
 - `pangolin-staged-upgrade-v1`
@@ -38,6 +46,8 @@ This repo is minimum worker-operable for bounded workflows:
 - `pangolin-traefik-companion-update-v1`
 
 ### Work Classes
+
+- `environment-status-scan-v1`: `read-only infrastructure / documentation mutation`
 
 - `pangolin-readonly-audit-v1`: `read-only`
 - `pangolin-upgrade-readiness-audit-v1`: `read-only`
@@ -51,6 +61,8 @@ This repo is minimum worker-operable for bounded workflows:
 
 ### Goals
 
+- `environment-status-scan-v1`: scan one canonical environment, compare verified runtime evidence with its runtime profile, prior scan, and `docs/ENVIRONMENTS.md`, then update permitted documentation without remediating infrastructure
+
 - `pangolin-readonly-audit-v1`: produce a safe, repeatable runtime audit of the live Pangolin stack on `vm890`
 - `pangolin-upgrade-readiness-audit-v1`: produce a safe, repeatable, read-only upgrade-readiness assessment for the live Pangolin stack on `vm890` using live runtime facts plus official upstream release data
 - `pangolin-staged-upgrade-v1`: perform a staged, backup-backed Pangolin-only upgrade on `vm890` using explicit version hops and verification gates, without changing companion services
@@ -58,6 +70,8 @@ This repo is minimum worker-operable for bounded workflows:
 - `pangolin-traefik-companion-update-v1`: perform a staged, backup-backed Traefik-only companion upgrade on `vm890` using explicit version hops and verification gates, without changing Pangolin, Gerbil, CrowdSec, Badger config, or unrelated containers
 
 ## Helper Path
+
+- `bin/environment-status-scan.sh`
 
 - `bin/check-vm890-profile.sh`
 - `bin/verify-vm890-runtime.sh`
@@ -77,6 +91,8 @@ This repo is minimum worker-operable for bounded workflows:
 - `bin/end-to-end-pangolin-traefik-companion-update-v1.sh`
 
 ## Input Spec
+
+- `specs/environments/<environment>.conf`
 
 - `specs/pangolin-readonly-audit-v1.vm890.conf`
 - `specs/pangolin-upgrade-readiness-audit-v1.vm890.conf`
@@ -142,3 +158,7 @@ For `pangolin-traefik-companion-update-v1`, success also requires:
 - Pangolin, Gerbil, CrowdSec, and unrelated containers remain present after each hop
 - each hop passes structural verification and runtime verification before the next hop
 - the final report includes the executed hop sequence and backup filenames
+
+## Environment Status Workflow Rule
+
+`docs/ENVIRONMENTS.md` is mandatory input to environment-status work. A scan may update the selected runtime profile and a dated report. It may update `docs/ENVIRONMENTS.md` only when a verified standard environment field materially changes; a routine scan alone must not bump its Last updated date. Infrastructure remains read-only during this workflow. Any remediation is a separate authorised task. Environments whose spec uses `ADAPTER=manual` are deliberately not automated yet and must stop rather than guess.
