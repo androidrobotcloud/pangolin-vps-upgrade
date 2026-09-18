@@ -2,7 +2,7 @@
 
 > **Date:** 2026-09-18
 > **Execution report:** `docs/reports/2026-09-18-vm890-upgrade-execution.md`
-> **Commit range:** `11ab801` (preparation) → `0b8063d` (cleanup) → `f484cbc` (complete)
+> **Commit range:** `11ab801` (preparation) → `0b8063d` (cleanup) → `f484cbc` (complete) → `c378847` (lessons) → `3cebacd` (qc)
 >
 > This document captures operational experience from the live vm890 Pangolin
 > upgrade so that future agents can avoid repeating the same mistakes and
@@ -478,13 +478,135 @@ Post-restore verification helper with HTTPS 404 decision path.
 ## Validation
 
 - All modified/new helpers pass `bash -n` syntax check
-- `check-upgrade-disk.sh` tested: passes on current vm890 (85% used, 3.1 GB free)
-- `check-registry-connectivity.sh` tested: passes (Docker Hub reachable from vm890)
-- `verify-service-recovery.sh` tested: passes (all layers healthy)
+- `check-upgrade-disk.sh`: correctly FAILS on current vm890 (92% > 90%) — this is the intended post-upgrade state
+- `check-registry-connectivity.sh`: passes (Docker Hub reachable from vm890)
+- `verify-service-recovery.sh`: passes (all layers healthy)
+- `resolve-pangolin-target-image.sh`: correctly derives Enterprise targets
 - No live vm890 mutation occurred during this review
 - Historical reports were not rewritten
 - Current runtime documentation correctly states Pangolin `ee-1.23.0`
 - Lessons document is discoverable from README and REPO_CONTRACT.md
+- README links are now repository-relative (no absolute filesystem paths)
+
+---
+
+## Quality-Control Verification (2026-09-18)
+
+> ChatGPT applied repository-side quality-control commits (`b97df24` through
+> `3cebacd`) after the lessons document was created. This section records the
+> verification of those changes and the fresh disk evidence.
+
+### Canonical Target Image Resolver
+
+A new helper `bin/resolve-pangolin-target-image.sh` centralizes edition-preserving
+target-image resolution. The `apply`, `verify`, and `registry-preflight` paths now
+all use this single resolver, eliminating the risk that preflight and mutation
+could disagree about Community vs Enterprise image selection.
+
+**Proof (against live vm890):**
+```
+$ ./bin/resolve-pangolin-target-image.sh specs/pangolin-staged-upgrade-v1.vm890.conf 1.22.2
+docker.io/fosrl/pangolin:ee-1.22.2
+
+$ ./bin/resolve-pangolin-target-image.sh specs/pangolin-staged-upgrade-v1.vm890.conf 1.23.0
+docker.io/fosrl/pangolin:ee-1.23.0
+```
+
+**Community preservation (local fixture test):**
+```
+Community input:  docker.io/fosrl/pangolin:1.21.1  →  docker.io/fosrl/pangolin:1.22.2
+Enterprise input: docker.io/fosrl/pangolin:ee-1.21.1  →  docker.io/fosrl/pangolin:ee-1.23.0
+```
+
+### Registry Preflight Uses Exact Mutation Targets
+
+The end-to-end orchestrator's registry preflight now obtains image references from
+the same canonical resolver:
+```bash
+target_images+=("$(./bin/resolve-pangolin-target-image.sh "$SPEC_FILE" "$target")")
+```
+
+**Proof:** registry preflight received exactly:
+- `docker.io/fosrl/pangolin:ee-1.22.2` (not `fosrl/pangolin:1.22.2`)
+- `docker.io/fosrl/pangolin:ee-1.23.0` (not `fosrl/pangolin:1.23.0`)
+
+Both confirmed reachable (HTTP 401) from vm890.
+
+### Bug Found and Fixed During Verification
+
+**File:** `bin/apply-pangolin-hop.sh` line 28
+**Defect:** ChatGPT's diff introduced literal `\n` characters instead of actual
+newlines, AND the replacement line started with `#`, making the entire
+`target_image` and `edition_prefix` assignments part of a comment. The script
+would have failed because `target_image` was never set.
+
+**File:** `bin/verify-pangolin-version.sh` line 25
+**Defect:** Same literal `\n` issue. Additionally, the `compose_image` variable
+assignment was removed but the variable was still referenced in the comparison
+check, which would have caused an "unbound variable" failure under `set -u`.
+
+**Fix applied:** Replaced literal `\n` with actual newlines; restored the
+`compose_image` assignment in verify; uncommented the code lines in both files.
+
+### README Portability
+
+All absolute filesystem paths (`/Users/hustler2025/...`) in README.md were replaced
+with repository-relative links by ChatGPT (`3cebacd`). Verification confirmed no
+remaining absolute paths in README.md, MASTER_OPERATING_POLICY.md, or REPO_CONTRACT.md.
+
+### Fresh Disk Evidence (2026-09-18, post-qc)
+
+```
+$ ssh hustler2025@vm890 "df -h /home/hustler2025/docker/pangolin-vps"
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1        20G   18G  1.7G  92% /
+```
+
+**Disk preflight result: FAIL (correct)**
+```
+Available:  2G (2 GB)  ← passes the ≥2 GB absolute floor
+Usage:      92% (92%)  ← FAILS the ≤90% ceiling
+```
+
+| Historical state | Usage | Context |
+|---|---|---|
+| During failed pull (Hop 2 attempt 1) | 99% (253 MB free) | Failed extraction left partial layers |
+| After image cleanup | 85% (3.1 GB free) | 3 inactive Community images removed |
+| **Current (post-upgrade)** | **92% (1.7 GB free)** | **Normal post-upgrade state** |
+
+The current 92% is the expected post-upgrade state: the new ee-1.23.0 image
+replaced the old one, and no cleanup has been performed since. The preflight
+correctly blocks another upgrade until the operator reviews and removes
+reclaimable candidates. **This is the intended behavior** — the threshold must
+not be weakened to make the machine pass.
+
+### Profile/Runtime Verification (read-only)
+```
+Profile check: hostname ✓, stack ✓, services ✓, image ✗ (spec still says ee-1.21.1)
+Runtime check: health ✓, HTTPS 200 ✓, healthy services ✓
+```
+
+The profile "failure" is expected — `EXPECTED_PANGOLIN_IMAGE` in the spec reflects
+the pre-upgrade baseline and correctly detects that the version has changed.
+The runtime check passes, confirming the stack is healthy.
+
+### Files Changed by QC (verified, not redesigned)
+| File | Change |
+|---|---|
+| `bin/resolve-pangolin-target-image.sh` | NEW — canonical edition-preserving resolver |
+| `bin/apply-pangolin-hop.sh` | Uses canonical resolver for target image |
+| `bin/verify-pangolin-version.sh` | Uses canonical resolver for expected image |
+| `bin/end-to-end-pangolin-staged-upgrade-v1.sh` | Registry preflight uses canonical resolver |
+| `README.md` | Absolute paths → repository-relative links |
+
+### Confirmation
+- All 8 helpers pass `bash -n` syntax check
+- Canonical resolver derives correct Enterprise targets
+- Community preservation verified via local fixture
+- Registry preflight receives exact mutation targets
+- No live vm890 mutation during verification
+- No secrets added
+- Historical reports not rewritten
 
 ---
 

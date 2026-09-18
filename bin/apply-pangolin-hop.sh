@@ -25,7 +25,12 @@ remote() {
 current_compose_image="$(remote "cd '$STACK_PATH' && awk '/image:.*fosrl\\/pangolin:/ {print \$2; exit}' docker-compose.yml")"
 current_runtime_image="$(remote "docker inspect pangolin --format '{{.Config.Image}}'")"
 
-# Resolve the exact target image through the canonical edition-preserving helper.\n# The registry preflight and mutation path use this same resolver, so they cannot\n# disagree about Community vs Enterprise image selection.\ntarget_image="$(./bin/resolve-pangolin-target-image.sh "$SPEC_FILE" "$TARGET_VERSION")"\nedition_prefix="${target_image##*:}"\nedition_prefix="${edition_prefix%%[0-9]*}"\n
+# Resolve the exact target image through the canonical edition-preserving helper.
+# The registry preflight and mutation path use this same resolver, so they cannot
+# disagree about Community vs Enterprise image selection.
+target_image="$(./bin/resolve-pangolin-target-image.sh "$SPEC_FILE" "$TARGET_VERSION")"
+edition_prefix="${target_image##*:}"
+edition_prefix="${edition_prefix%%[0-9]*}"
 current_runtime_version="${current_runtime_image##*:}"
 
 python3 - "$current_runtime_version" "$TARGET_VERSION" "$edition_prefix" <<'PY'

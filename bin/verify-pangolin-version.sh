@@ -22,7 +22,10 @@ remote() {
   ssh "$SSH_TARGET" "$@"
 }
 
-# Resolve the expected image through the same canonical edition-preserving helper\n# used by the mutation and registry-preflight paths.\nexpected_image="$(./bin/resolve-pangolin-target-image.sh "$SPEC_FILE" "$EXPECTED_VERSION")"\n
+# Resolve the expected image through the same canonical edition-preserving helper
+# used by the mutation and registry-preflight paths.
+compose_image="$(remote "cd '$STACK_PATH' && awk '/image:.*fosrl\\/pangolin:/ {print \$2; exit}' docker-compose.yml")"
+expected_image="$(./bin/resolve-pangolin-target-image.sh "$SPEC_FILE" "$EXPECTED_VERSION")"
 runtime_image="$(remote "docker inspect pangolin --format '{{.Config.Image}}'")"
 
 if [[ "$compose_image" != "$expected_image" ]]; then
