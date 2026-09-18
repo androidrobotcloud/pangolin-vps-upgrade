@@ -17,20 +17,20 @@ These workflows are intentionally narrow. They give a worker deterministic audit
 - host: `hustler2025@vm890`
 - stack path: `/home/hustler2025/docker/pangolin-vps`
 - canonical dashboard URL: `https://pangolin.pang.androidrobot.cloud`
-- latest live snapshot: [docs/runtime/CURRENT_STATE.md](/Users/hustler2025/CodeWorkspace/Pangolin%20VPS%20Upgrade/docs/runtime/CURRENT_STATE.md)
-- local offline clone: [docs/runtime/vm890-backup.md](/Users/hustler2025/CodeWorkspace/Pangolin%20VPS%20Upgrade/docs/runtime/vm890-backup.md)
+- latest live snapshot: [docs/runtime/CURRENT_STATE.md](docs/runtime/CURRENT_STATE.md)
+- local offline clone: [docs/runtime/vm890-backup.md](docs/runtime/vm890-backup.md)
 
 ## Start Here
 
 Read these local contract files in order:
 
-1. [docs/MASTER_OPERATING_POLICY.md](/Users/hustler2025/CodeWorkspace/Pangolin%20VPS%20Upgrade/docs/MASTER_OPERATING_POLICY.md)
-2. [docs/REPO_CONTRACT.md](/Users/hustler2025/CodeWorkspace/Pangolin%20VPS%20Upgrade/docs/REPO_CONTRACT.md)
-3. [docs/runtime/CURRENT_STATE.md](/Users/hustler2025/CodeWorkspace/Pangolin%20VPS%20Upgrade/docs/runtime/CURRENT_STATE.md)
-4. [docs/runtime/vm890.md](/Users/hustler2025/CodeWorkspace/Pangolin%20VPS%20Upgrade/docs/runtime/vm890.md)
-5. [docs/handoffs/pangolin-readonly-audit-v1.md](/Users/hustler2025/CodeWorkspace/Pangolin%20VPS%20Upgrade/docs/handoffs/pangolin-readonly-audit-v1.md) or [docs/handoffs/pangolin-upgrade-readiness-audit-v1.md](/Users/hustler2025/CodeWorkspace/Pangolin%20VPS%20Upgrade/docs/handoffs/pangolin-upgrade-readiness-audit-v1.md)
-6. [docs/handoffs/pangolin-staged-upgrade-v1.md](/Users/hustler2025/CodeWorkspace/Pangolin%20VPS%20Upgrade/docs/handoffs/pangolin-staged-upgrade-v1.md) or [docs/handoffs/pangolin-gerbil-companion-update-v1.md](/Users/hustler2025/CodeWorkspace/Pangolin%20VPS%20Upgrade/docs/handoffs/pangolin-gerbil-companion-update-v1.md)
-7. [docs/handoffs/pangolin-traefik-companion-update-v1.md](/Users/hustler2025/CodeWorkspace/Pangolin%20VPS%20Upgrade/docs/handoffs/pangolin-traefik-companion-update-v1.md)
+1. [docs/MASTER_OPERATING_POLICY.md](docs/MASTER_OPERATING_POLICY.md)
+2. [docs/REPO_CONTRACT.md](docs/REPO_CONTRACT.md)
+3. [docs/runtime/CURRENT_STATE.md](docs/runtime/CURRENT_STATE.md)
+4. [docs/runtime/vm890.md](docs/runtime/vm890.md)
+5. [docs/handoffs/pangolin-readonly-audit-v1.md](docs/handoffs/pangolin-readonly-audit-v1.md) or [docs/handoffs/pangolin-upgrade-readiness-audit-v1.md](docs/handoffs/pangolin-upgrade-readiness-audit-v1.md)
+6. [docs/handoffs/pangolin-staged-upgrade-v1.md](docs/handoffs/pangolin-staged-upgrade-v1.md) or [docs/handoffs/pangolin-gerbil-companion-update-v1.md](docs/handoffs/pangolin-gerbil-companion-update-v1.md)
+7. [docs/handoffs/pangolin-traefik-companion-update-v1.md](docs/handoffs/pangolin-traefik-companion-update-v1.md)
 
 ## Helper Path
 
@@ -65,7 +65,7 @@ Versioned helper examples above reflect the current known live baseline, not a f
 
 Operational experience from live upgrades is captured in:
 
-- [docs/reports/2026-09-18-vm890-lessons-learned.md](/Users/hustler2025/CodeWorkspace/opencode/Pangolin%20VPS%20Upgrade/docs/reports/2026-09-18-vm890-lessons-learned.md) — disk capacity, registry connectivity, backup/restore != service recovery, HTTPS 404 diagnosis, Enterprise preservation, Badger auto-migration, canonical backup verification.
+- [docs/reports/2026-09-18-vm890-lessons-learned.md](docs/reports/2026-09-18-vm890-lessons-learned.md) — disk capacity, registry connectivity, backup/restore != service recovery, HTTPS 404 diagnosis, Enterprise preservation, Badger auto-migration, canonical backup verification.
 
 Read this before performing future upgrades; it documents failure modes actually encountered and the preventive gates now in place.
 
@@ -79,7 +79,7 @@ If a user reports a sudden `403` on Pangolin or a Pangolin-protected site, use t
 
 Reference:
 
-- [docs/CROWDSEC_403_FALSE_POSITIVE_HELPER.md](/Users/hustler2025/CodeWorkspace/Pangolin%20VPS%20Upgrade/docs/CROWDSEC_403_FALSE_POSITIVE_HELPER.md)
+- [docs/CROWDSEC_403_FALSE_POSITIVE_HELPER.md](docs/CROWDSEC_403_FALSE_POSITIVE_HELPER.md)
 
 ## Legacy Material
 
