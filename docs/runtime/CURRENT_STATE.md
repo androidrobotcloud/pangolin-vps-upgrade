@@ -2,7 +2,7 @@
 
 This file is the quickest current-state snapshot for the live `vm890` Pangolin environment.
 
-Last verified: `2026-09-18`
+Last verified: `2026-09-18` (post Hop 1 execution)
 
 ## Live Target
 
@@ -13,11 +13,11 @@ Last verified: `2026-09-18`
 
 ## Live Versions
 
-- Pangolin: `fosrl/pangolin:ee-1.21.1`
+- Pangolin: `fosrl/pangolin:ee-1.22.2`
 - Gerbil: `fosrl/gerbil:1.5.0`
 - Traefik: `traefik:v3.7.11`
 - CrowdSec: `crowdsecurity/crowdsec:latest`
-- Badger plugin: `v1.5.0`
+- Badger plugin: `v1.7.0`
 
 ## Live Edition
 
@@ -36,7 +36,14 @@ Last verified: `2026-09-18`
 
 - `20260712-154853-pre-1.20.0.tar.gz`
 - `20260712-155338-pre-v3.7.7.tar.gz`
+- `20260824-143033-pre-1.21.1.tar.gz`
+- `20260824-143422-pre-1.4.3.tar.gz`
+- `20260824-143647-pre-1.5.0.tar.gz`
+- `20260824-143916-pre-v3.7.11.tar.gz`
 - `20260824-164422-pre-ee-1.21.1.tar.gz`
+- `20260918-163102-pre-1.22.2.tar.gz` (recovery point: ee-1.22.2, pre-Hop1)
+- `20260918-163442-pre-1.23.0.tar.gz` (recovery point: ee-1.22.2, pre-Hop2 attempt 1)
+- `20260918-163915-pre-1.23.0.tar.gz` (recovery point: ee-1.22.2, pre-Hop2 attempt 2)
 
 ## Current Disk Snapshot
 
