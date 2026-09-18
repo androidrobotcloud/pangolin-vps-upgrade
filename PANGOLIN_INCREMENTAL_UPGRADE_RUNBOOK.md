@@ -4,13 +4,23 @@ This runbook is for safely upgrading a self-hosted Pangolin Docker Compose stack
 
 It is based on a successful live upgrade of:
 
-- `pangolin 1.15.4 -> 1.16.2 -> 1.17.1 -> 1.18.1`
+- `pangolin 1.15.4 -> 1.16.2 -> 1.17.1 -> 1.18.4`
 - `gerbil 1.3.0 -> 1.3.1`
+
+Last reviewed: `2026-05-23`
+
+Observed latest stable versions at review time:
+
+- `pangolin 1.18.4`
+- `gerbil 1.4.0`
+- `traefik v3.7.0`
 
 Primary references:
 
 - Official update method: <https://docs.pangolin.net/self-host/how-to-update>
-- Target release example: <https://github.com/fosrl/pangolin/releases/tag/1.18.1>
+- Pangolin releases: <https://github.com/fosrl/pangolin/releases>
+- Gerbil releases: <https://github.com/fosrl/gerbil/releases>
+- Traefik releases: <https://github.com/traefik/traefik/releases>
 
 ## Scope and principles
 
@@ -51,7 +61,7 @@ Example path used successfully:
 
 - `1.15.4 -> 1.16.2`
 - `1.16.2 -> 1.17.1`
-- `1.17.1 -> 1.18.1`
+- `1.17.1 -> 1.18.4`
 
 Use the latest patch within each required minor line when possible.
 
@@ -77,6 +87,7 @@ Operational gotchas discovered during live work:
 - Traefik may briefly fail HTTPS checks during restart even when the stack is healthy moments later
 - Pangolin's internal health endpoint is usually only reachable from inside the container, not from the host
 - custom Traefik/CrowdSec tuning means a narrow-scope upgrade is safer than refreshing everything at once
+- companion service patching should usually be done separately from Pangolin migrations
 
 ## 4. Backup method
 
@@ -111,7 +122,7 @@ Recommended naming:
 
 - `YYYYMMDD-HHMMSS-pre-1.16.2.tar.gz`
 - `YYYYMMDD-HHMMSS-pre-1.17.1.tar.gz`
-- `YYYYMMDD-HHMMSS-pre-1.18.1.tar.gz`
+- `YYYYMMDD-HHMMSS-pre-1.18.4.tar.gz`
 - `YYYYMMDD-HHMMSS-pre-gerbil-1.3.1.tar.gz`
 
 ## 5. Validation commands
@@ -229,11 +240,11 @@ Expected migration pattern:
 - `Starting migrations from version 1.16.0`
 - `Migrations to run: 1.17.0`
 
-### 7.3 Upgrade `1.17.1 -> 1.18.1`
+### 7.3 Upgrade `1.17.1 -> 1.18.4`
 
 ```bash
 docker run --rm -v "$PWD:/work" alpine:3.20 \
-  sh -lc "sed -i 's#docker.io/fosrl/pangolin:1.17.1#docker.io/fosrl/pangolin:1.18.1#' /work/docker-compose.yml"
+  sh -lc "sed -i 's#docker.io/fosrl/pangolin:1.17.1#docker.io/fosrl/pangolin:1.18.4#' /work/docker-compose.yml"
 
 docker compose down
 docker compose pull pangolin
@@ -282,7 +293,40 @@ Healthy `gerbil 1.3.1` startup should show:
 - peers added successfully
 - HTTP server started on `:3004`
 
-## 9. Rollback procedure
+Note:
+
+- on the live `tony_vps` patch hop, the first external HTTPS probe briefly failed with `connection refused` while Traefik was still starting, then recovered to `HTTP/2 200` seconds later
+
+## 9. Optional Traefik patch update
+
+Use this only for a same-line Traefik patch update after confirming the target tag exists in the official Traefik releases.
+
+Backup first, then update only the Traefik image tag:
+
+```bash
+docker run --rm -v "$PWD:/work" alpine:3.20 \
+  sh -lc "sed -i 's#traefik:OLD#traefik:NEW#' /work/docker-compose.yml"
+```
+
+For a Traefik-only patch hop, prefer the narrow restart:
+
+```bash
+docker compose pull traefik
+docker compose up -d traefik
+```
+
+Validate:
+
+```bash
+docker compose ps
+docker exec pangolin curl -fsS http://localhost:3001/api/v1/ && echo
+curl -k -I -sS https://YOUR_PANGOLIN_FQDN | sed -n '1,12p'
+docker compose logs --tail=80 traefik
+```
+
+Use a full `docker compose down` only if a narrow Traefik restart is not sufficient for your stack behavior.
+
+## 10. Rollback procedure
 
 If a hop fails:
 
@@ -316,7 +360,7 @@ Use the matching tarball for the failed target:
 - failed while going to `1.17.1` -> restore `pre-1.17.1`
 - failed while going to `1.18.1` -> restore `pre-1.18.1`
 
-## 10. Post-upgrade checks worth doing manually
+## 11. Post-upgrade checks worth doing manually
 
 - log into the dashboard
 - review users, roles, and invites after `1.17.x`
@@ -325,7 +369,7 @@ Use the matching tarball for the failed target:
 - if using host-mode private resources, restart affected Newt agents if needed
 - confirm wildcard/private routing still behaves as expected
 
-## 11. Recommended streamlined workflow for the next host
+## 12. Recommended streamlined workflow for the next host
 
 For the next instance, use this order:
 

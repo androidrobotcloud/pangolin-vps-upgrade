@@ -1,0 +1,31 @@
+gerbil:
+    start_port: 51820
+    base_endpoint: "pangolin.pg.androidrobot.cloud"
+
+app:
+    dashboard_url: "https://pangolin.pg.androidrobot.cloud"
+    log_level: "info"
+    telemetry:
+        anonymous_usage: true
+
+domains:
+    domain1:
+        base_domain: "pg.androidrobot.cloud"
+        cert_resolver: "letsencrypt"
+        prefer_wildcard_cert: true
+
+server:
+    integration_port: 3003
+    secret: "REPLACE_ME"
+    cors:
+        origins: ["https://pangolin.pg.androidrobot.cloud", "https://api.pg.androidrobot.cloud"]
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
+        allowed_headers: ["Authorization", "X-CSRF-Token", "Content-Type"]
+        credentials: false
+
+flags:
+    enable_integration_api: true
+    require_email_verification: false
+    disable_signup_without_invite: true
+    disable_user_create_org: false
+    allow_raw_resources: true
