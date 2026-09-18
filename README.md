@@ -42,21 +42,32 @@ Run from repo root:
 ./bin/end-to-end-pangolin-readonly-audit-v1.sh specs/pangolin-readonly-audit-v1.vm890.conf
 ./bin/verify-pangolin-upgrade-readiness.sh specs/pangolin-upgrade-readiness-audit-v1.vm890.conf
 ./bin/end-to-end-pangolin-upgrade-readiness-audit-v1.sh specs/pangolin-upgrade-readiness-audit-v1.vm890.conf
-./bin/create-pangolin-backup.sh specs/pangolin-staged-upgrade-v1.vm890.conf 1.21.1
-./bin/apply-pangolin-hop.sh specs/pangolin-staged-upgrade-v1.vm890.conf 1.21.1
-./bin/verify-pangolin-version.sh specs/pangolin-staged-upgrade-v1.vm890.conf 1.21.1
+./bin/create-pangolin-backup.sh specs/pangolin-staged-upgrade-v1.vm890.conf 1.23.0
+./bin/apply-pangolin-hop.sh specs/pangolin-staged-upgrade-v1.vm890.conf 1.23.0
+./bin/verify-pangolin-version.sh specs/pangolin-staged-upgrade-v1.vm890.conf 1.23.0
 ./bin/end-to-end-pangolin-staged-upgrade-v1.sh specs/pangolin-staged-upgrade-v1.vm890.conf
-./bin/create-stack-backup.sh specs/pangolin-gerbil-companion-update-v1.vm890.conf 1.5.0
-./bin/apply-gerbil-hop.sh specs/pangolin-gerbil-companion-update-v1.vm890.conf 1.5.0
-./bin/verify-gerbil-version.sh specs/pangolin-gerbil-companion-update-v1.vm890.conf 1.5.0
+./bin/create-stack-backup.sh specs/pangolin-gerbil-companion-update-v1.vm890.conf 1.5.1
+./bin/apply-gerbil-hop.sh specs/pangolin-gerbil-companion-update-v1.vm890.conf 1.5.1
+./bin/verify-gerbil-version.sh specs/pangolin-gerbil-companion-update-v1.vm890.conf 1.5.1
 ./bin/end-to-end-pangolin-gerbil-companion-update-v1.sh specs/pangolin-gerbil-companion-update-v1.vm890.conf
-./bin/create-stack-backup.sh specs/pangolin-traefik-companion-update-v1.vm890.conf v3.7.11
-./bin/apply-traefik-hop.sh specs/pangolin-traefik-companion-update-v1.vm890.conf v3.7.11
-./bin/verify-traefik-version.sh specs/pangolin-traefik-companion-update-v1.vm890.conf v3.7.11
+./bin/create-stack-backup.sh specs/pangolin-traefik-companion-update-v1.vm890.conf v3.7.13
+./bin/apply-traefik-hop.sh specs/pangolin-traefik-companion-update-v1.vm890.conf v3.7.13
+./bin/verify-traefik-version.sh specs/pangolin-traefik-companion-update-v1.vm890.conf v3.7.13
 ./bin/end-to-end-pangolin-traefik-companion-update-v1.sh specs/pangolin-traefik-companion-update-v1.vm890.conf
+./bin/check-upgrade-disk.sh specs/pangolin-staged-upgrade-v1.vm890.conf
+./bin/check-registry-connectivity.sh specs/pangolin-staged-upgrade-v1.vm890.conf
+./bin/verify-service-recovery.sh specs/pangolin-staged-upgrade-v1.vm890.conf
 ```
 
 Versioned helper examples above reflect the current known live baseline, not a future upgrade plan.
+
+## Lessons Learned
+
+Operational experience from live upgrades is captured in:
+
+- [docs/reports/2026-09-18-vm890-lessons-learned.md](/Users/hustler2025/CodeWorkspace/opencode/Pangolin%20VPS%20Upgrade/docs/reports/2026-09-18-vm890-lessons-learned.md) — disk capacity, registry connectivity, backup/restore != service recovery, HTTPS 404 diagnosis, Enterprise preservation, Badger auto-migration, canonical backup verification.
+
+Read this before performing future upgrades; it documents failure modes actually encountered and the preventive gates now in place.
 
 ## CrowdSec 403 Triage
 

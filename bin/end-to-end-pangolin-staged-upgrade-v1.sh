@@ -20,8 +20,25 @@ source "$SPEC_FILE"
 
 mkdir -p "$(dirname "$REPORT_FILE")"
 
+# --- Preflight gates (read-only, fail before any mutation) ---
+# Profile and runtime checks establish the starting baseline.
 profile_output="$(./bin/check-vm890-profile.sh "$SPEC_FILE")"
 pre_runtime_output="$(./bin/verify-vm890-runtime.sh "$SPEC_FILE")"
+
+# Disk capacity preflight: fail early if there is insufficient space for the
+# new image to download + extract while the old image still exists, plus
+# headroom for backup growth and partial-pull residue. Does NOT auto-delete.
+disk_output="$(./bin/check-upgrade-disk.sh "$SPEC_FILE")"
+
+# Registry connectivity preflight: prove the target host can reach Docker Hub
+# NOW (not just that the tag exists locally). A transient network failure here
+# prevents a failed pull that would leave the stack DOWN.
+# Build the list of target images from the hop versions.
+target_images=()
+for target in $PANGOLIN_HOPS; do
+  target_images+=("${PANGOLIN_IMAGE_REPO}:${target}")
+done
+registry_output="$(./bin/check-registry-connectivity.sh "$SPEC_FILE" "${target_images[@]}")"
 
 declare -a backup_files
 declare -a backup_verify_outputs
@@ -62,6 +79,8 @@ remote_status="$(ssh "$SSH_TARGET" "docker ps --format 'table {{.Names}}\t{{.Ima
   echo "Commands run:"
   echo "./bin/check-vm890-profile.sh $SPEC_FILE"
   echo "./bin/verify-vm890-runtime.sh $SPEC_FILE"
+  echo "./bin/check-upgrade-disk.sh $SPEC_FILE"
+  echo "./bin/check-registry-connectivity.sh $SPEC_FILE [target-images]"
   for target in $PANGOLIN_HOPS; do
     echo "./bin/create-pangolin-backup.sh $SPEC_FILE $target"
     echo "./bin/verify-pangolin-backup.sh $SPEC_FILE <backup-filename>"
@@ -104,6 +123,12 @@ remote_status="$(ssh "$SSH_TARGET" "docker ps --format 'table {{.Names}}\t{{.Ima
   echo
   echo "Pre-upgrade runtime output:"
   echo "$pre_runtime_output"
+  echo
+  echo "Disk preflight output:"
+  echo "$disk_output"
+  echo
+  echo "Registry connectivity preflight output:"
+  echo "$registry_output"
   echo
   for i in "${!backup_files[@]}"; do
     echo "Backup $((i+1)):"
