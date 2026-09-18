@@ -36,7 +36,7 @@ disk_output="$(./bin/check-upgrade-disk.sh "$SPEC_FILE")"
 # Build the list of target images from the hop versions.
 target_images=()
 for target in $PANGOLIN_HOPS; do
-  target_images+=("${PANGOLIN_IMAGE_REPO}:${target}")
+  target_images+=("$(./bin/resolve-pangolin-target-image.sh "$SPEC_FILE" "$target")")
 done
 registry_output="$(./bin/check-registry-connectivity.sh "$SPEC_FILE" "${target_images[@]}")"
 
