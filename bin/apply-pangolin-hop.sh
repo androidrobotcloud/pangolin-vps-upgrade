@@ -25,13 +25,7 @@ remote() {
 current_compose_image="$(remote "cd '$STACK_PATH' && awk '/image:.*fosrl\\/pangolin:/ {print \$2; exit}' docker-compose.yml")"
 current_runtime_image="$(remote "docker inspect pangolin --format '{{.Config.Image}}'")"
 
-# Derive the edition tag prefix (e.g. "ee-" or "") from the CURRENT image so the
-# target preserves the running edition. This makes it impossible to accidentally
-# convert ee-1.21.1 -> 1.22.2 (Community) or vice-versa.
-current_tag="${current_compose_image##*:}"
-edition_prefix="${current_tag%%[0-9]*}"
-target_image="${PANGOLIN_IMAGE_REPO}:${edition_prefix}${TARGET_VERSION}"
-
+# Resolve the exact target image through the canonical edition-preserving helper.\n# The registry preflight and mutation path use this same resolver, so they cannot\n# disagree about Community vs Enterprise image selection.\ntarget_image="$(./bin/resolve-pangolin-target-image.sh "$SPEC_FILE" "$TARGET_VERSION")"\nedition_prefix="${target_image##*:}"\nedition_prefix="${edition_prefix%%[0-9]*}"\n
 current_runtime_version="${current_runtime_image##*:}"
 
 python3 - "$current_runtime_version" "$TARGET_VERSION" "$edition_prefix" <<'PY'
